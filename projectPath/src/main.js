@@ -111,3 +111,11 @@ Vue.filter('length', function (value) {
   }
   return value.replace(/[^\x00-\xff]/g, '01').length
 })
+Vue.filter('selectionOptions', function (values) {
+  var options = []
+  for (var val in values) {
+    options.push({'key': values[val][0], 'value': values[val][1]})
+  }
+  return options
+})
+
