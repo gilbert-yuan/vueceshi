@@ -6,6 +6,7 @@
       :results="searchResult"
       v-model="searchVal"
       position="fixed"
+      limit='5'
       @on-cancel="onCancel"
       :autoFixed="true"
       style=" top: 44px"
@@ -77,7 +78,6 @@
         this.$refs.search.setFocus()
       },
       getResult () {
-        console.log(this.searchResult)
         return this.searchResult
       },
       onFocus () {
@@ -110,7 +110,6 @@
             search_view_id: currentAction.search_view_id.id
           }
         }).then(function (res) {
-          console.log(res)
           let parseString = require('xml2js').parseString
           parseString(res.body.arch, function (result, err) {
             if (err && err.search) {
@@ -123,7 +122,6 @@
                     })
                   }
                 } catch (err) {
-                  console.log(err.stack)
                 }
               }
             }
@@ -245,7 +243,6 @@
       compute_list: function (fields) {
         var self = this
         self.treeList = []
-        console.log(self.allRecordData)
         for (let recordRow of self.allRecordData) {
           let oneRecord = {
             title: '',
@@ -265,7 +262,6 @@
             let descMessage = ''
             for (let field of fields) {
               let fieldRow = self.all_field[field]
-              console.log(fieldRow.type)
               if (['float', 'integer', 'datetime'].indexOf(fieldRow.type) >= 0) {
                 otherMessage = otherMessage + '  ' + fieldRow.string + ':' + recordRow[field]
               } else if (['boolean'].indexOf(fieldRow.type) >= 0) {
@@ -275,7 +271,6 @@
               } else if (['many2one'].indexOf(fieldRow.type) >= 0) {
                 descMessage = descMessage + '  ' + fieldRow.string + ':' + recordRow[field][1]
               } else if (['selection'].indexOf(fieldRow.type) >= 0) {
-                console.log(recordRow[field])
                 for (var selectionArray of fieldRow.selection) {
                   if (selectionArray[0] === recordRow[field]) {
                     descMessage = descMessage + '  ' + fieldRow.string + ':' + selectionArray[1]
@@ -294,3 +289,23 @@
     }
   }
 </script>
+
+<style lang="less">
+  @import '~vux/src/styles/reset.less';
+  .weui-cells.vux-search_show {
+    margin-top: 0!important;
+    overflow-y: auto!important;
+    position: fixed!important;
+    width: 100%!important;
+    height: auto!important;
+    .weui-cell:last-child {
+      margin-bottom: 0px!important;
+    }
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    &::after {
+      display: none;
+    }
+  }
+</style>

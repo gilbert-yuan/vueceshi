@@ -1,7 +1,12 @@
 <template>
   <div id="app" style="height:100%;">
     <view-box ref="viewBox">
-      <x-header slot="header" style="width:100%;position:fixed;left:0;top:0;z-index:100;">
+      <x-header slot="header" 
+      :right-options="{showMore: true}"
+      :title='title' 
+      @on-click-more="showMenus = true" 
+      style="width:100%;position:fixed;left:0;top:0;z-index:100;">
+        
       </x-header>
       <div slot="default" style="position:absolute;top: 44px;width:100%;">
         <router-view></router-view>
@@ -17,13 +22,22 @@
         </tabbar>
       </div>
     </view-box>
+    <div v-transfer-dom>
+        <actionsheet :menus="menus" v-model="showMenus" show-cancel></actionsheet>
+    </div>
+    <div v-transfer-dom>
+      <loading :show="isLoading" text="加载中...."></loading>
+    </div>
+    <loading v-model="isLoading"></loading>
   </div>
 </template>
-
 <script>
-
-  import {Tabbar, TabbarItem, Group, Cell, ViewBox, XHeader, Drawer} from 'vux'
+  import {Tabbar, TabbarItem, Group, Cell, Loading, ButtonTabItem, ViewBox, XHeader, Drawer, ButtonTab, Actionsheet, TransferDomDirective as TransferDom} from 'vux'
+  import { mapState } from 'vuex'
   export default {
+    directives: {
+      TransferDom
+    },
     name: 'app',
     components: {
       Tabbar,
@@ -32,11 +46,20 @@
       Group,
       Cell,
       Drawer,
-      ViewBox
+      ViewBox,
+      Actionsheet,
+      ButtonTab,
+      ButtonTabItem,
+      Loading
     },
     data: function () {
       return {
         active_second_view_id: '',
+        menus: {
+          menu1: '提问',
+          menu2: '新建'
+        },
+        showMenus: false,
         first_level_menu: [],
         second_level_menu: [],
         last_leve_menu: [],
@@ -46,8 +69,7 @@
         showModeValue: '',
         showPlacementValue: '',
         headerTransition: '',
-        leftOptions: '',
-        title: ''
+        leftOptions: ''
       }
     },
     created: function () {
@@ -71,6 +93,16 @@
           name: 'menu',
           params: {menu_id: menuId}
         })
+      }
+    },
+    computed: {
+      ...mapState({
+        route: state => state.route,
+        path: state => state.route.path,
+        isLoading: state => state.vux.isLoading
+      }),
+      title () {
+        return this.componentName ? `Demo/${this.componentName}` : 'Demo/~~'
       }
     }
   }

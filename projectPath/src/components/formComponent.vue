@@ -8,7 +8,7 @@
           <!--type="radio"-->
            <!--/>-->
       </template>
-      <template v-if=" label.$.name==='state'">
+      <!--<template v-if=" label.$.name==='state'">
         <flow>
           <template v-for="(option, index) in all_field[label.$.name].selection">
             <template t-if="option[0]!==one_record_data[label.$.name][1]">
@@ -17,8 +17,8 @@
             </template>
           </template>
         </flow>
-      </template>
-      <template v-if=" label.$.name==='message_ids'">
+      </template>-->
+      <!-- <template v-if=" label.$.name==='message_ids'">
         <timeline>
           <timeline-item>
             <h4 class="recent">【广东】 广州市 已发出</h4>
@@ -33,12 +33,12 @@
             <p>2016-04-15 9:00:00</p>
           </timeline-item>
         </timeline>
-      </template>
+      </template>-->
 
 
       <template v-if="['', '[]', [], false, 'false'].indexOf(one_record_data[label.$.name])<0 ">
         <template v-if="['selection'].indexOf(all_field[label.$.name]['type'])>=0">
-          <selector :title="label.$.name&&all_field[label.$.name]['string']" placeholder="label.$.name&&label.$.name" v-model="one_record_data[label.$.name]" :options="all_field[label.$.name].selection|selectionOptions"></selector>
+          <selector disable :title="label.$.name&&all_field[label.$.name]['string']" placeholder="label.$.name&&label.$.name" v-model="one_record_data[label.$.name]" :options="all_field[label.$.name].selection|selectionOptions"></selector>
         </template>
         <template v-else-if="['many2one'].indexOf(all_field[label.$.name]['type'])>=0">
           <cell :title="label.$.name&&all_field[label.$.name]['string']" :value="one_record_data[label.$.name][1]" link="https://vux.li"></cell>
@@ -49,6 +49,10 @@
         <template v-else-if="['date'].indexOf(all_field[label.$.name]['type'])>=0">
           <datetime v-model="one_record_data[label.$.name]" format="YYYY-MM-DD" :minute-list="['00', '15', '30', '45']" :title="label.$.name&&all_field[label.$.name]['string']"></datetime>
         </template>
+
+       <!-- <template v-else-if="['binary'].indexOf(all_field[label.$.name]['type'])>=0">
+          <swiper :list="one_record_data[label.$.name]丨getImageList(label.$.name&&all_field[label.$.name]['string'])" v-model="imageIndex" ></swiper>
+        </template> -->
         <template v-else>
           <cell :title="label.$.name&&label.$.name&&all_field[label.$.name]['string']" :value="one_record_data[label.$.name]"></cell>
         </template>
@@ -79,7 +83,7 @@
 </template>
 
 <script>
-  import { GroupTitle, Group, Cell, Selector, Checker, Flow, FlowState, FlowLine, Timeline, TimelineItem, XButton } from 'vux'
+  import { GroupTitle, Group, Divider, Cell, Selector, Datetime, Checker, Swiper, Flow, FlowState, FlowLine, Timeline, TimelineItem, XButton } from 'vux'
   export default {
     name: 'childMenu',
     components: {
@@ -93,7 +97,10 @@
       Checker,
       Timeline,
       TimelineItem,
-      XButton
+      XButton,
+      Datetime,
+      Swiper,
+      Divider
     },
     data: function () {
       return {
@@ -106,7 +113,8 @@
         state_normal: 'show',
         input_disabled: false,
         show_views_temporary: {form: {}},
-        record_id: this.$route.params.record_id
+        record_id: this.$route.params.record_id,
+        imageIndex: 0
       }
     },
     created: function () {

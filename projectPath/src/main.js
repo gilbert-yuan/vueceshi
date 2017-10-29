@@ -5,12 +5,28 @@ import FastClick from 'fastclick'
 import VueRouter from 'vue-router'
 import App from './App'
 import childMenu from './components/childMenu'
-import treeComponent from './components/treeComponent'
-import formComponent from './components/formComponent'
 import VueResource from 'vue-resource'
+import Vuex from 'vuex'
 
 Vue.use(VueResource)
 Vue.use(VueRouter)
+Vue.use(Vuex)
+/**
+ * 设置vuex
+ */
+const store = new Vuex.Store({}) // 这里你可能已经有其他 module
+
+store.registerModule('vux', { // 名字自己定义
+  state: {
+    isLoading: false
+  },
+  mutations: {
+    updateLoadingStatus (state, payload) {
+      console.log(payload, '-----------')
+      state.isLoading = payload
+    }
+  }
+})
 
 const routes = [{
   path: '/',
@@ -23,13 +39,15 @@ const routes = [{
 }, {
   name: 'tree',
   path: '/mobile/:menu_id/:action_id/tree',
-  component: treeComponent
-
+  component: function (resolve) {
+    require(['./components/treeComponent'], resolve)
+  }
 }, {
   name: 'form',
   path: '/mobile/:menu_id/:action_id/form/:record_id',
-  component: formComponent
-
+  component: function (resolve) {
+    require(['./components/formComponent'], resolve)
+  }
 }]
 const router = new VueRouter({
   routes
@@ -39,9 +57,19 @@ FastClick.attach(document.body)
 
 Vue.config.productionTip = false
 
+router.beforeEach(function (to, from, next) {
+  store.commit('updateLoadingStatus', true)
+  next()
+})
+router.afterEach(function (to) {
+  setTimeout(function () {
+    store.commit('updateLoadingStatus', false)
+  }, 300)
+})
 /* eslint-disable no-new */
 new Vue({
   router,
+  store,
   render: h => h(App)
 }).$mount('#app-box')
 
@@ -118,4 +146,3 @@ Vue.filter('selectionOptions', function (values) {
   }
   return options
 })
-
