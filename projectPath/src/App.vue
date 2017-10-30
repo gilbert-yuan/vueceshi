@@ -1,15 +1,19 @@
 <template>
   <div id="app" style="height:100%;">
     <view-box ref="viewBox">
-      <x-header slot="header" 
+      <x-header slot="header"
       :right-options="{showMore: true}"
-      :title='title' 
-      @on-click-more="showMenus = true" 
+      :title='title'
+      @on-click-more="showMenus = true"
       style="width:100%;position:fixed;left:0;top:0;z-index:100;">
-        
+
       </x-header>
       <div slot="default" style="position:absolute;top: 44px;width:100%;">
-        <router-view></router-view>
+        <transition :name="'vux-pop-' + (direction === 'forward' ? 'out' : 'in')">
+          <keep-alive>
+          <router-view></router-view>
+          </keep-alive>
+        </transition>
       </div>
       <div slot="bottom">
         <tabbar style="position:fixed">
@@ -74,9 +78,7 @@
     },
     created: function () {
       var url = '/mobile/odoo/get_first_level_menu'
-      this.loading = true
       this.$http.get(url).then(function (res) {
-        this.loading = false
         this.first_level_menu = res.body
         if (res.body && typeof res.body === 'object' && res.body[0]) {
           this.active_second_view_id = this.first_level_menu[0].id
@@ -99,7 +101,8 @@
       ...mapState({
         route: state => state.route,
         path: state => state.route.path,
-        isLoading: state => state.vux.isLoading
+        isLoading: state => state.vux.isLoading,
+        direction: state => state.vux.direction
       }),
       title () {
         return this.componentName ? `Demo/${this.componentName}` : 'Demo/~~'
@@ -116,7 +119,38 @@
     width: 100%;
     overflow-x: hidden;
   }
+  .vux-pop-out-enter-active,
+  .vux-pop-out-leave-active,
+  .vux-pop-in-enter-active,
+  .vux-pop-in-leave-active {
+    will-change: transform;
+    transition: all 250ms;
+    height: 100%;
+    top: 0;
+    position: absolute;
+    backface-visibility: hidden;
+    perspective: 1000;
+  }
 
+  .vux-pop-out-enter {
+    opacity: 0;
+    transform: translate3d(-100%, 0, 0);
+  }
+
+  .vux-pop-out-leave-active {
+    opacity: 0;
+    transform: translate3d(100%, 0, 0);
+  }
+
+  .vux-pop-in-enter {
+    opacity: 0;
+    transform: translate3d(100%, 0, 0);
+  }
+
+  .vux-pop-in-leave-active {
+    opacity: 0;
+    transform: translate3d(-100%, 0, 0);
+  }
   body {
     background-color: #fbf9fe;
   }

@@ -29,9 +29,7 @@ export default {
   methods: {
     get_second_level_menu: function () {
       var url = '/mobile/odoo/get_second_level_menu'
-      this.loading = true
       this.$http.get(url, {params: {parent_id: this.$route.params.menu_id}}).then(function (res) {
-        this.loading = false
         if (res.body) {
           this.second_level_menu = res.body
         }

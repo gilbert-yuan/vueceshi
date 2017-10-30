@@ -18,12 +18,16 @@ const store = new Vuex.Store({}) // 这里你可能已经有其他 module
 
 store.registerModule('vux', { // 名字自己定义
   state: {
-    isLoading: false
+    isLoading: false,
+    demoScrollTop: 0,
+    direction: 'forward'
   },
   mutations: {
-    updateLoadingStatus (state, payload) {
-      console.log(payload, '-----------')
+    updateLoadingStatus: function (state, payload) {
       state.isLoading = payload
+    },
+    UPDATE_DIRECTION: function (state, payload) {
+      state.direction = payload
     }
   }
 })
@@ -55,8 +59,6 @@ const router = new VueRouter({
 
 FastClick.attach(document.body)
 
-Vue.config.productionTip = false
-
 router.beforeEach(function (to, from, next) {
   store.commit('updateLoadingStatus', true)
   next()
@@ -66,12 +68,46 @@ router.afterEach(function (to) {
     store.commit('updateLoadingStatus', false)
   }, 300)
 })
+
+/***
+ * Vux转场动画
+ */
+
+const history = window.sessionStorage
+history.clear()
+var historyCount = history.getItem('count') * 1 || 0
+history.setItem('/', 0)
+
+router.beforeEach(function (to, from, next) {
+  const toIndex = history.getItem(to.path)
+  const fromIndex = history.getItem(from.path)
+  if (toIndex) {
+    if (!fromIndex || parseInt(toIndex, 10) > parseInt(fromIndex, 10) || (toIndex === '0' && fromIndex === '0')) {
+      store.commit('UPDATE_DIRECTION', {direction: 'forward'})
+    } else {
+      store.commit('UPDATE_DIRECTION', {direction: 'reverse'})
+    }
+  } else {
+    ++historyCount
+    history.setItem('count', historyCount)
+    to.path !== '/' && history.setItem(to.path, historyCount)
+    store.commit('UPDATE_DIRECTION', {direction: 'reverse'})
+  }
+  next()
+})
+
+// 作者：Yunfly
+// 链接：http://www.jianshu.com/p/a29d5ecfaadb
+//   來源：简书
+// 著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 /* eslint-disable no-new */
-new Vue({
-  router,
-  store,
-  render: h => h(App)
-}).$mount('#app-box')
+/***
+ * all filter
+ */
+
+Vue.filter('menu_to_link', function (value) {
+  return '/second/nemu/' + value.id
+})
 
 Vue.filter('get_menu_ico_path', function (value) {
   if (value && value.indexOf(',') > 0) {
@@ -80,9 +116,6 @@ Vue.filter('get_menu_ico_path', function (value) {
   }
 })
 
-Vue.filter('menu_to_link', function (value) {
-  return '/second/nemu/' + value.id
-})
 Vue.filter('obj_str_to_id', function (value) {
   if (value && value.indexOf(',') > 0) {
     var menuPath = value.split(',')
@@ -97,11 +130,11 @@ Vue.filter('obj_str_to_id', function (value) {
 //   });
 // });
 
-Vue.filter('get_select_value', function (value) {
-  if (value) {
-    return value[1]
-  } else {
-    return ''
+Vue.filter('get_select_value', function (value, fieldTypeSelection) {
+  for (var selectionIndex in fieldTypeSelection) {
+    if (fieldTypeSelection[selectionIndex][0] === value) {
+      return fieldTypeSelection[selectionIndex][1]
+    }
   }
 })
 Vue.filter('object_has_key', function (value, key) {
@@ -146,3 +179,17 @@ Vue.filter('selectionOptions', function (values) {
   }
   return options
 })
+
+// Vue.filter('getMany2oneLink', function (values, Many2oneField) {
+//   var url = '/mobile/odoo/getActionId'
+//   this.$http.get(url).then(function (res) {
+//     return '/mobile/' + this.$router.menu_id + '/' + res.body.actionId + '/' + values
+//   })
+// })
+
+new Vue({
+  router,
+  store,
+  render: h => h(App)
+}).$mount('#app-box')
+

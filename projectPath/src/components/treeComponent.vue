@@ -60,7 +60,10 @@
     watch: {
       '$route': function (to, from) {
         this.dataDoamin = []
-        this.get_view_data()
+
+        this.$nextTick(function () {
+          this.get_view_data()
+        })
       },
       searchVal (newVal, oldVal) {
         var self = this
@@ -104,29 +107,31 @@
       get_search_field: function (currentAction) {
         var loadViewUrl = '/mobile/odoo/load_search_views'
         var self = this
-        self.$http.get(loadViewUrl, {
-          params: {
-            model: currentAction.res_model,
-            search_view_id: currentAction.search_view_id.id
-          }
-        }).then(function (res) {
-          let parseString = require('xml2js').parseString
-          parseString(res.body.arch, function (result, err) {
-            if (err && err.search) {
-              for (var field of err.search.field) {
-                try {
-                  if (!self.all_field.hasOwnPrototype) {
-                    self.searchResult.push({
-                      title: self.all_field[field.$.name].string,
-                      other: field.$.name
-                    })
+        if (currentAction.search_view_id) {
+          self.$http.get(loadViewUrl, {
+            params: {
+              model: currentAction.res_model,
+              search_view_id: currentAction.search_view_id.id
+            }
+          }).then(function (res) {
+            let parseString = require('xml2js').parseString
+            parseString(res.body.arch, function (result, err) {
+              if (err && err.search) {
+                for (var field of err.search.field) {
+                  try {
+                    if (!self.all_field.hasOwnPrototype) {
+                      self.searchResult.push({
+                        title: self.all_field[field.$.name].string,
+                        other: field.$.name
+                      })
+                    }
+                  } catch (err) {
                   }
-                } catch (err) {
                 }
               }
-            }
+            })
           })
-        })
+        }
       },
       get_field_views: function (currentAction) {
         var loadViewUrl = '/mobile/odoo/load_views'
@@ -157,6 +162,7 @@
         }).then(function (res) {
           this.allRecordData = res.body
           this.now_record_length = res.body.length
+          this.get_field_views(currentAction)
           if (res.body.length !== 8) {
             self.is_all_records_data = true
           } else {
@@ -180,7 +186,7 @@
             self.now_record_length = res.body.length
           } else {
             this.allRecordData = res.body
-            this.compute_list(self.fields)
+            this.get_field_views(self.currentAction)
           }
         })
       },
@@ -191,19 +197,16 @@
           self.currentAction = res.body
           if (self.currentAction) {
             if (!self.currentAction.views) {
-              self.$notify.error({
-                title: '错误',
-                message: '这个菜单对应的动作没有定义视图类型！'
-              })
+//              self.$notify.error({
+//                title: '错误',
+//                message: '这个菜单对应的动作没有定义视图类型！'
+//              })
             }
             setTimeout(function () {
               self.get_all_data(self.currentAction)
             }, 100)
             setTimeout(function () {
               self.get_all_fields(self.currentAction)
-            }, 100)
-            setTimeout(function () {
-              self.get_field_views(self.currentAction)
             }, 100)
             setTimeout(function () {
               self.get_search_field(self.currentAction)
@@ -243,48 +246,58 @@
       compute_list: function (fields) {
         var self = this
         self.treeList = []
+        var allFieldUrl = '/mobile/odoo/name_get'
+        var recordIds = []
         for (let recordRow of self.allRecordData) {
-          let oneRecord = {
-            title: '',
-            desc: '',
-            url: {},
-            meta: {}
+          recordIds.push(recordRow.id)
+        }
+        self.$http.get(allFieldUrl, {
+          params: {
+            model: self.currentAction.res_model,
+            ids: JSON.stringify(recordIds)
           }
-          var allFieldUrl = '/mobile/odoo/name_get'
-          self.$http.get(allFieldUrl, {
-            params: {
-              model: self.currentAction.res_model,
-              id: recordRow.id
-            }
-          }).then(function (res) {
-            oneRecord.title = res.body[0][1]
-            let otherMessage = ''
-            let descMessage = ''
-            for (let field of fields) {
-              let fieldRow = self.all_field[field]
-              if (['float', 'integer', 'datetime'].indexOf(fieldRow.type) >= 0) {
-                otherMessage = otherMessage + '  ' + fieldRow.string + ':' + recordRow[field]
-              } else if (['boolean'].indexOf(fieldRow.type) >= 0) {
-                otherMessage = otherMessage + '  ' + fieldRow.string + ':' + (recordRow[field] === 'false' ? '√' : '×')
-              } else if (['char', 'text'].indexOf(fieldRow.type) >= 0) {
-                descMessage = descMessage + '  ' + fieldRow.string + ':' + recordRow[field]
-              } else if (['many2one'].indexOf(fieldRow.type) >= 0) {
-                descMessage = descMessage + '  ' + fieldRow.string + ':' + recordRow[field][1]
-              } else if (['selection'].indexOf(fieldRow.type) >= 0) {
-                for (var selectionArray of fieldRow.selection) {
-                  if (selectionArray[0] === recordRow[field]) {
-                    descMessage = descMessage + '  ' + fieldRow.string + ':' + selectionArray[1]
-                    break
+        }).then(function (res) {
+          if (res.body) {
+            let nameIndex = 0
+            for (let recordRow of self.allRecordData) {
+              let oneRecord = {
+                title: '',
+                desc: '',
+                url: {},
+                meta: {}
+              }
+              oneRecord.title = res.body[nameIndex] && res.body[nameIndex++][1]
+              let otherMessage = ''
+              let descMessage = ''
+              for (let field of fields) {
+                if (recordRow[field]) {
+                  let fieldRow = self.all_field[field]
+                  if (['float', 'integer', 'datetime'].indexOf(fieldRow.type) >= 0) {
+                    otherMessage = otherMessage + '  ' + fieldRow.string + ':' + recordRow[field]
+                  } else if (['boolean'].indexOf(fieldRow.type) >= 0) {
+                    otherMessage = otherMessage + '  ' + fieldRow.string + ':' + (recordRow[field] === 'false' ? '√' : '×')
+                  } else if (['char', 'text'].indexOf(fieldRow.type) >= 0) {
+                    descMessage = descMessage + '  ' + fieldRow.string + ':' + recordRow[field]
+                  } else if (['many2one'].indexOf(fieldRow.type) >= 0) {
+                    let man2oneIndex = 1
+                    descMessage = descMessage + '  ' + fieldRow.string + ':' + recordRow[field][man2oneIndex]
+                  } else if (['selection'].indexOf(fieldRow.type) >= 0) {
+                    for (var selectionArray of fieldRow.selection) {
+                      if (selectionArray[0] === recordRow[field]) {
+                        descMessage = descMessage + '  ' + fieldRow.string + ':' + selectionArray[1]
+                        break
+                      }
+                    }
                   }
                 }
               }
+              oneRecord.meta.other = otherMessage
+              oneRecord.desc = descMessage
+              oneRecord.url = '/mobile/' + self.$route.params.menu_id + '/' + self.$route.params.action_id + '/form/' + recordRow.id
+              self.treeList.push(oneRecord)
             }
-            oneRecord.meta.other = otherMessage
-            oneRecord.desc = descMessage
-            oneRecord.url = '/mobile/' + self.$route.params.menu_id + '/' + self.$route.params.action_id + '/form/' + recordRow.id
-            self.treeList.push(oneRecord)
-          })
-        }
+          }
+        })
       }
     }
   }

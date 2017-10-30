@@ -22,7 +22,6 @@
     created: function () {
       var url = '/mobile/odoo/get_last_level_menu'
       this.$http.get(url, {params: {parent_id: this.secondMenuId}}).then(function (res) {
-        this.loading = false
         if (res.body) {
           this.last_leve_menu = res.body
         }
@@ -40,9 +39,15 @@
     watch: {
       secondMenuId: function (newVal, oldVal) {
         var url = '/mobile/odoo/get_last_level_menu'
-        console.log(newVal)
-        this.$http.get(url, {params: {parent_id: oldVal}}).then(function (res) {
-          this.loading = false
+        this.$http.get(url, {params: {parent_id: newVal}}).then(function (res) {
+          if (res.body) {
+            this.last_leve_menu = res.body
+          }
+        })
+      },
+      menuId: function (newVal, oldVal) {
+        var url = '/mobile/odoo/get_last_level_menu'
+        this.$http.get(url, {params: {parent_id: newVal}}).then(function (res) {
           if (res.body) {
             this.last_leve_menu = res.body
           }
