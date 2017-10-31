@@ -37,10 +37,12 @@
                       :binaryVal="one_record_data[label.$.name]" ></BinayImage>
         </template>
         <template v-else-if="['one2many'].indexOf(all_field[label.$.name]['type'])>=0">
-           <!--<one2many :label="label.$.name&&all_field[label.$.name]['string']"-->
-                     <!--:field="all_field[label.$.name]"-->
-                     <!--:valIds="one_record_data[label.$.name]"-->
-           <!--&gt; </one2many>-->
+
+            <One2Many :label="label.$.name&&all_field[label.$.name]['string']"
+                      :field="all_field[label.$.name]"
+                      :valIds="one_record_data[label.$.name]"
+            > </One2Many>
+
         </template>
         <template v-else>
           <cell :title="label.$.name&&label.$.name&&all_field[label.$.name]['string']" :value="one_record_data[label.$.name]||'空'"></cell>

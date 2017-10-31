@@ -60,7 +60,6 @@
     watch: {
       '$route': function (to, from) {
         this.dataDoamin = []
-
         this.$nextTick(function () {
           this.get_view_data()
         })
