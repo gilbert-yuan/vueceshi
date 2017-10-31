@@ -206,9 +206,6 @@
               self.get_all_data(self.currentAction)
             }, 100)
             setTimeout(function () {
-              self.get_all_fields(self.currentAction)
-            }, 100)
-            setTimeout(function () {
               self.get_search_field(self.currentAction)
             }, 100)
           }
@@ -233,6 +230,7 @@
         for (var view in fieldViews.fields_views) {
           let parseString = require('xml2js').parseString
           if (view === 'list') {
+            this.all_field = fieldViews.fields_views[view].fields
             parseString(fieldViews.fields_views[view].arch, function (result, err) {
               self.fields = []
               for (var fieldIndex in err.tree.field) {
@@ -240,6 +238,14 @@
               }
               self.compute_list(self.fields)
             })
+          } else if (view === 'search') {
+            console.log(fieldViews.fields_views[view].fields)
+            for (let [key, searchField] in fieldViews.fields_views[view].fields) {
+              self.searchResult.push({
+                title: searchField.string,
+                other: key
+              })
+            }
           }
         }
       },
@@ -322,3 +328,4 @@
     }
   }
 </style>
+

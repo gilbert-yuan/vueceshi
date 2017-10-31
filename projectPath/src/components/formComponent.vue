@@ -1,27 +1,18 @@
 <template>
   <div>
-
-    <template v-for="label in show_views.form">
-      <template v-if="['boolean'].indexOf(all_field[label.$.name]['type'])>=0">
-        <!--<checker-->
-          <!--v-model="one_record_data[label.$.name][1]"-->
-          <!--type="radio"-->
-           <!--/>-->
-      </template>
-      <template v-if="label.$.name==='state'">
+    <template v-if="all_field.state">
         <StateBar
-          :fieldSelection="all_field[label.$.name].selection "
-          :NowState="one_record_data[label.$.name]"
+          :fieldSelection="all_field['state'].selection "
+          :NowState="one_record_data['state']"
         ></StateBar>
-      </template>
+    </template>
+    <template v-for="(label, index) in show_views.form">
        <template v-if="label.$.name==='message_ids'">
-          <Message :message_ids="one_record_data[label.$.name]">
-          </Message>
+          <Message :message_ids="one_record_data[label.$.name]"> </Message>
       </template>
       <template v-else-if="['', '[]', [], false, 'false'].indexOf(one_record_data[label.$.name])<0 ">
         <template v-if="['selection'].indexOf(all_field[label.$.name]['type'])>=0">
-          <Selection
-            :title="label.$.name&&all_field[label.$.name]['string']"
+          <Selection :title="label.$.name&&all_field[label.$.name]['string']"
             :placeholder="label.$.name&&label.$.name"
             :data="one_record_data[label.$.name]"
             :options="all_field[label.$.name].selection"
@@ -45,46 +36,37 @@
           <BinayImage :imgTitle="label.$.name&&label.$.name&&all_field[label.$.name]['string']"
                       :binaryVal="one_record_data[label.$.name]" ></BinayImage>
         </template>
+        <template v-else-if="['one2many'].indexOf(all_field[label.$.name]['type'])>=0">
+           <!--<one2many :label="label.$.name&&all_field[label.$.name]['string']"-->
+                     <!--:field="all_field[label.$.name]"-->
+                     <!--:valIds="one_record_data[label.$.name]"-->
+           <!--&gt; </one2many>-->
+        </template>
         <template v-else>
           <cell :title="label.$.name&&label.$.name&&all_field[label.$.name]['string']" :value="one_record_data[label.$.name]||'空'"></cell>
         </template>
       </template>
-      <!--<template v-if="one_record_data[label.$.name]">-->
-        <!--<template v-if="['boolean'].indexOf(all_field[label.$.name]['type'])>=0">-->
-          <!--<x-switch :title="label.$.name&&label.$.name&&all_field[label.$.name]['string']"></x-switch>-->
-        <!--</template>-->
-        <!--<template v-else-if="['text'].indexOf(all_field[label.$.name]['type'])>=0">-->
-          <!--<x-textarea :title="label.$.name&&label.$.name&&all_field[label.$.name]['string']" placeholder="请填写详细信息" :show-counter="false" :rows="3"></x-textarea>-->
-        <!--</template>-->
-        <!--<template v-else-if="['datetime'].indexOf(all_field[label.$.name]['type'])>=0">-->
-          <!--<datetime :title="label.$.name&&label.$.name&&all_field[label.$.name]['string']" v-model="one_record_data[label.$.name]" value-text-align="left"></datetime>-->
-        <!--</template>-->
-        <!--<template v-else-if="['char'].indexOf(all_field[label.$.name]['type'])>=0">-->
-          <!--<x-input :title="label.$.name&&label.$.name&&all_field[label.$.name]['string']" v-model="one_record_data[label.$.name]"></x-input>-->
-        <!--</template>-->
-        <!--<template v-else-if="['many2one'].indexOf(all_field[label.$.name]['type'])>=0">-->
-          <!--<x-input :title="label.$.name&&label.$.name&&all_field[label.$.name]['string']" v-model="one_record_data[label.$.name]"></x-input>-->
-        <!--</template>-->
-        <!--<template v-else-if="['integer'].indexOf(all_field[label.$.name]['type'])>=0">-->
-          <!--<x-number :title="label.$.name&&label.$.name&&all_field[label.$.name]['string']" align="left" v-model="one_record_data[label.$.name]" button-style="round" :min="0" :max="5"></x-number>-->
-        <!--</template>-->
     </template>
   </div>
 </template>
 
 <script>
-  import { GroupTitle, Group, Divider, Cell, Datetime, Checker, Swiper, XButton } from 'vux'
+  import { GroupTitle, Group, Divider, Cell, Datetime, Panel, Checker, Swiper, XButton } from 'vux'
   import Many2one from './Many2one'
   import BinayImage from './BinaryImage'
   import Selection from './Selection'
   import StateBar from './StateBar'
   import Message from './Message'
+  import One2Many from './One2Many'
+
   export default {
     name: 'childMenu',
     components: {
       Group,
+      Panel,
       Selection,
       StateBar,
+      One2Many,
       Message,
       GroupTitle,
       Cell,
@@ -108,6 +90,26 @@
         input_disabled: false,
         show_views_temporary: {form: {}},
         record_id: this.$route.params.record_id,
+        one2manyList: [{
+          src: 'http://somedomain.somdomain/x.jpg',
+          fallbackSrc: 'http://placeholder.qiniudn.com/60x60/3cc51f/ffffff',
+          title: '标题一',
+          desc: '由各种物质组成的巨型球状天体，叫做星球。星球有一定的形状，有自己的运行轨道。',
+          url: '/component/cell'
+        }, {
+          src: 'http://placeholder.qiniudn.com/60x60/3cc51f/ffffff',
+          title: '标题二',
+          desc: '由各种物质组成的巨型球状天体，叫做星球。星球有一定的形状，有自己的运行轨道。',
+          url: {
+            path: '/component/radio',
+            replace: false
+          },
+          meta: {
+            source: '来源信息',
+            date: '时间',
+            other: '其他信息'
+          }
+        }],
         imageIndex: 0
       }
     },
@@ -157,18 +159,10 @@
           self.currentAction = res.body
           if (self.currentAction) {
             if (!self.currentAction.views) {
-//              self.$notify.error({
-//                title: '错误',
-//                message: '这个菜单对应的动作没有定义视图类型！'
-//              })
             }
-            setTimeout(function () {
-              self.get_all_fields(self.currentAction)
-            }, 100)
             setTimeout(function () {
               self.get_field_views(self.currentAction)
             }, 100)
-
             setTimeout(function () {
               self.get_one_data(self.currentAction)
             }, 100)
@@ -183,19 +177,22 @@
             } else {
               this.show_views_temporary.form.push(form[xmlTag])
             }
+          } else if (xmlTag === '$') {
           } else if (typeof form[xmlTag] === 'object') {
             this.xml_get_all_field(form[xmlTag])
           }
         }
       },
       xml_convert_to_json: function (fieldViews) {
-        var self = this
+        let self = this
         for (var view in fieldViews.fields_views) {
           if (view === 'form') {
+            self.all_field = fieldViews.fields_views[view].fields
             self.show_views_temporary.form = []
-            let parseString = require('xml2js').parseString
-            parseString(fieldViews.fields_views[view].arch, function (result, err) {
-              self.xml_get_all_field(err)
+            let xml2js = require('xml2js')
+            let parser = new xml2js.Parser()
+            parser.parseString(fieldViews.fields_views[view].arch, function (errMsg, result) {
+              self.xml_get_all_field(result)
               self.show_views = self.show_views_temporary
             })
           }

@@ -1,7 +1,7 @@
 <template>
   <div class="timeline-demo">
   <timeline>
-    <timeline-item v-for="message in messages">
+    <timeline-item v-for="(message, index) in messages" :key='index'>
       <h4 class="recent">{{message.create_uid[1]}}</h4>
       <p class="recent">{{message.body}}</p>
       <p class="recent">{{message.create_date}}</p>
@@ -28,7 +28,6 @@
       var loadViewUrl = '/mobile/odoo/load_all_messages'
       var self = this
       let parseString = require('xml2js').parseString
-      console.log(self.message_ids)
       this.$http.get(loadViewUrl, {
         params: {
           message_ids: JSON.stringify(self.message_ids)
@@ -38,7 +37,6 @@
         self.messages = res.body
         for (var mIndex in self.messages) {
           if (self.messages[mIndex].body) {
-            console.log(self.messages[mIndex].body)
             parseString(self.messages[mIndex].body, function (result, err) {
               self.messages[mIndex].body = err.p
             })
@@ -55,7 +53,6 @@
 //            })
 //          }
         }
-        console.log(self.messages)
       })
     },
     watch: {
@@ -63,7 +60,6 @@
         var loadViewUrl = '/mobile/odoo/load_all_messages'
         var self = this
         let parseString = require('xml2js').parseString
-        console.log(self.message_ids)
         this.$http.get(loadViewUrl, {
           params: {
             message_ids: JSON.stringify(self.message_ids)
@@ -73,13 +69,11 @@
           self.messages = res.body
           for (var mIndex in self.messages) {
             if (self.messages[mIndex].body) {
-              console.log(self.messages[mIndex].body)
               parseString(self.messages[mIndex].body, function (result, err) {
                 self.messages[mIndex].body = err.p
               })
             }
           }
-          console.log(self.messages)
         })
       }
     }
